@@ -1,2 +1,4 @@
-# k-NN-algorithm
-Simple CLI implementation of k-NN-algorithm
+# How to run
+```
+$ python main.py data1.csv
+```
