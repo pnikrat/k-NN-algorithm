@@ -7,11 +7,14 @@ class SingleAlgorithmCase:
         self.file_handler = CsvFileHandler(cli_argument)
         self.training_data = []
         self.k_value = None
+        self.calculate_distance_function = None
 
     def start(self):
         self.file_handler.import_training_data()
         self.training_data = self.file_handler.get_training_data_with_labels()
         self.choose_k_value()
+        self.choose_distance_calculation_method()
+        print(self.calculate_distance_function)
 
     def choose_k_value(self):
         k_value = input("Please provide k value for algorithm: ")
@@ -20,6 +23,18 @@ class SingleAlgorithmCase:
             self.k_value = int(k_value)
         else:
             UserInputEvaluation.retry_user_input(self.choose_k_value, "k value must be integer and positive")
+
+    def choose_distance_calculation_method(self):
+        choice_of_method = input("Classify using Euclides distance (E) or Manhattan distance (M):")
+        if isinstance(choice_of_method, str):
+            choice_of_method = choice_of_method.lower()
+            if choice_of_method == 'e':
+                self.calculate_distance_function = EuclidesDistance.calculate_distance
+                return
+            elif choice_of_method == 'm':
+                self.calculate_distance_function = ManhattanDistance.calculate_distance
+                return
+        UserInputEvaluation.retry_user_input(self.choose_distance_calculation_method, "Wrong input. Type letter E or M")
 
 
 class CsvFileHandler:
@@ -59,3 +74,15 @@ class UserInputEvaluation:
     def retry_user_input(prompt_function, why_retry_message):
         print(why_retry_message)
         prompt_function()
+
+
+class EuclidesDistance:
+    @staticmethod
+    def calculate_distance(self):
+        pass
+
+
+class ManhattanDistance:
+    @staticmethod
+    def calculate_distance(self):
+        pass
