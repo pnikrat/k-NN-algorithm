@@ -2,6 +2,26 @@ import csv
 import numpy as np
 
 
+class SingleAlgorithmCase:
+    def __init__(self, cli_argument):
+        self.file_handler = CsvFileHandler(cli_argument)
+        self.training_data = []
+        self.k_value = None
+
+    def start(self):
+        self.file_handler.import_training_data()
+        self.training_data = self.file_handler.get_training_data_with_labels()
+        self.choose_k_value()
+
+    def choose_k_value(self):
+        k_value = input("Please provide k value for algorithm: ")
+        if UserInputEvaluation.is_k_value_valid(k_value):
+            print("Chosen k value = " + k_value)
+            self.k_value = int(k_value)
+        else:
+            UserInputEvaluation.retry_user_input(self.choose_k_value, "k value must be integer and positive")
+
+
 class CsvFileHandler:
     training_labels = []
     training_data = []
@@ -19,17 +39,23 @@ class CsvFileHandler:
                     print(row)
                     self.training_data.append(np.array(row, dtype='int64'))
 
-
     def get_training_data_with_labels(self):
         return self.training_labels, self.training_data
 
 
-class SingleAlgorithmCase:
-    def __init__(self, cli_argument):
-        self.file_handler = CsvFileHandler(cli_argument)
-        self.file_handler.import_training_data()
-        self.training_data = self.file_handler.get_training_data_with_labels()
+class UserInputEvaluation:
+    @staticmethod
+    def is_k_value_valid(value):
+        try:
+            value = int(value)
+            if value > 0:
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
 
-    def start(self):
-        print(self.training_data[0])
-        print(self.training_data[1])
+    @staticmethod
+    def retry_user_input(prompt_function, why_retry_message):
+        print(why_retry_message)
+        prompt_function()
