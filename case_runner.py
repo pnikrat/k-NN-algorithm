@@ -89,15 +89,14 @@ class UserInputEvaluation:
 
 class EuclidesDistance:
     @staticmethod
-    def calculate_distance(self, caseA, caseB):
+    def calculate_distance(caseA, caseB):
         difference_vector = (caseA - caseB)**2
-        #squared_difference_vector = difference_vector**2
         return np.sqrt(difference_vector.sum())
 
 
 class ManhattanDistance:
     @staticmethod
-    def calculate_distance(self, caseA, caseB):
+    def calculate_distance(caseA, caseB):
         pass
 
 
@@ -107,6 +106,7 @@ class ClassificationFlow:
         self.user_provided_test_case = None
         self.user_provided_test_attribute = None
         self.current_attribute_label = None
+        self.test_case_class = None
 
     def run_user_classification_loop(self):
         print("Press q to quit during classification")
@@ -114,8 +114,8 @@ class ClassificationFlow:
             try:
                 self.user_provided_test_case = self.provide_test_case()
                 print("Classifying...")
-                print(self.user_provided_test_case)
                 self.classify()
+                print("Test case: " + str(self.user_provided_test_case) + " belongs to class: " + self.test_case_class)
             except UserQuitException as quitmessage:
                 print(quitmessage.args[0])
                 return
@@ -128,7 +128,7 @@ class ClassificationFlow:
             self.current_attribute_label = attribute_label
             self.provide_test_attribute()
             single_test_case.append(self.user_provided_test_attribute)
-        return np.array(single_test_case)
+        return np.array(single_test_case, dtype='float64')
 
     def provide_test_attribute(self):
         chosen_test_attribute = input("Input numeric value for attribute named: " + self.current_attribute_label)
@@ -140,7 +140,24 @@ class ClassificationFlow:
             UserInputEvaluation.retry_user_input(self.provide_test_attribute, "Test attribute must be numeric")
 
     def classify(self):
-        pass
+        distances = []
+        occured_classes = {}
+        for data, data_class in self.studied_case.training_data[1]:
+            distance = self.studied_case.calculate_distance_function(data, self.user_provided_test_case)
+            distances.append((distance, data_class))
+        distances = sorted(distances, key=lambda x: x[0])
+        k_closest_neighbours = distances[:self.studied_case.k_value]
+        for x in k_closest_neighbours:
+            if x[1] not in occured_classes:
+                occured_classes[x[1]] = 1
+            else:
+                occured_classes[x[1]] += 1
+        most_frequent_key = next(iter(occured_classes.keys())) # pick an arbitrary dict key
+        for key, val in occured_classes.items():
+            if val > occured_classes[most_frequent_key]:
+                most_frequent_key = key
+        self.test_case_class = most_frequent_key
+
 
 class UserQuitException(Exception):
     pass
