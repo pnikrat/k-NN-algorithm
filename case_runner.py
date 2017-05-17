@@ -12,9 +12,11 @@ class SingleAlgorithmCase:
     def start(self):
         self.file_handler.import_training_data()
         self.training_data = self.file_handler.get_training_data_with_labels()
+        print(self.training_data[1])
         self.choose_k_value()
         self.choose_distance_calculation_method()
-        print(self.calculate_distance_function)
+        classification_flow = ClassificationFlow(self)
+        classification_flow.run_user_classification_loop()
 
     def choose_k_value(self):
         k_value = input("Please provide k value for algorithm: ")
@@ -51,8 +53,7 @@ class CsvFileHandler:
                 if index == 0:
                     self.training_labels = row
                 else:
-                    print(row)
-                    self.training_data.append(np.array(row, dtype='int64'))
+                    self.training_data.append((np.array(row[:-1], dtype='float64'), row[-1]))
 
     def get_training_data_with_labels(self):
         return self.training_labels, self.training_data
@@ -75,14 +76,71 @@ class UserInputEvaluation:
         print(why_retry_message)
         prompt_function()
 
+    @staticmethod
+    def is_numeric(value):
+        try:
+            value = float(value)
+            return True
+        except ValueError:
+            if value == 'q':
+                raise UserQuitException("Quitting...")
+            else:
+                return False
 
 class EuclidesDistance:
     @staticmethod
-    def calculate_distance(self):
-        pass
+    def calculate_distance(self, caseA, caseB):
+        difference_vector = (caseA - caseB)**2
+        #squared_difference_vector = difference_vector**2
+        return np.sqrt(difference_vector.sum())
 
 
 class ManhattanDistance:
     @staticmethod
-    def calculate_distance(self):
+    def calculate_distance(self, caseA, caseB):
         pass
+
+
+class ClassificationFlow:
+    def __init__(self, single_algorithm_case):
+        self.studied_case = single_algorithm_case
+        self.user_provided_test_case = None
+        self.user_provided_test_attribute = None
+        self.current_attribute_label = None
+
+    def run_user_classification_loop(self):
+        print("Press q to quit during classification")
+        while True:
+            try:
+                self.user_provided_test_case = self.provide_test_case()
+                print("Classifying...")
+                print(self.user_provided_test_case)
+                self.classify()
+            except UserQuitException as quitmessage:
+                print(quitmessage.args[0])
+                return
+
+    def provide_test_case(self):
+        single_test_case = []
+        for index, attribute_label in enumerate(self.studied_case.training_data[0]):
+            if index == len(self.studied_case.training_data[0]) - 1:
+                break
+            self.current_attribute_label = attribute_label
+            self.provide_test_attribute()
+            single_test_case.append(self.user_provided_test_attribute)
+        return np.array(single_test_case)
+
+    def provide_test_attribute(self):
+        chosen_test_attribute = input("Input numeric value for attribute named: " + self.current_attribute_label)
+        if UserInputEvaluation.is_numeric(chosen_test_attribute):
+            print("Chosen value " + chosen_test_attribute + " for attribute " + self.current_attribute_label)
+            self.user_provided_test_attribute = chosen_test_attribute
+            return
+        else:
+            UserInputEvaluation.retry_user_input(self.provide_test_attribute, "Test attribute must be numeric")
+
+    def classify(self):
+        pass
+
+class UserQuitException(Exception):
+    pass
