@@ -97,7 +97,8 @@ class EuclidesDistance:
 class ManhattanDistance:
     @staticmethod
     def calculate_distance(caseA, caseB):
-        pass
+        difference_vector = np.absolute(caseA - caseB)
+        return difference_vector.sum()
 
 
 class ClassificationFlow:
