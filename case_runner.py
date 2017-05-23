@@ -3,6 +3,11 @@ import numpy as np
 
 
 class SingleAlgorithmCase:
+    """Handle single program run.
+    
+    Imports training data with CsvFileHandler object, remembers all data necessary for classification in its 
+    instance variables and then passes itself to ClassificationFlow object to begin classification phase.
+    """
     def __init__(self, cli_argument):
         self.file_handler = CsvFileHandler(cli_argument)
         self.training_data = []
@@ -12,7 +17,6 @@ class SingleAlgorithmCase:
     def start(self):
         self.file_handler.import_training_data()
         self.training_data = self.file_handler.get_training_data_with_labels()
-        print(self.training_data[1])
         self.choose_k_value()
         self.choose_distance_calculation_method()
         classification_flow = ClassificationFlow(self)
@@ -40,6 +44,10 @@ class SingleAlgorithmCase:
 
 
 class CsvFileHandler:
+    """Import training data from CSV file.
+    
+    Imports training data to list of tuples (@np.array of all attribute values, @string assigned class).
+    """
     training_labels = []
     training_data = []
 
@@ -87,6 +95,7 @@ class UserInputEvaluation:
             else:
                 return False
 
+
 class EuclidesDistance:
     @staticmethod
     def calculate_distance(caseA, caseB):
@@ -102,6 +111,10 @@ class ManhattanDistance:
 
 
 class ClassificationFlow:
+    """Handle classification of new cases.
+    
+    Using instance variables from SingleAlgorithmCase classifies all new user-input cases.
+    """
     def __init__(self, single_algorithm_case):
         self.studied_case = single_algorithm_case
         self.user_provided_test_case = None
@@ -146,7 +159,7 @@ class ClassificationFlow:
         for data, data_class in self.studied_case.training_data[1]:
             distance = self.studied_case.calculate_distance_function(data, self.user_provided_test_case)
             distances.append((distance, data_class))
-        distances = sorted(distances, key=lambda x: x[0])
+        distances = sorted(distances, key=lambda y: y[0])
         k_closest_neighbours = distances[:self.studied_case.k_value]
         for x in k_closest_neighbours:
             if x[1] not in occured_classes:
@@ -161,4 +174,5 @@ class ClassificationFlow:
 
 
 class UserQuitException(Exception):
+    """Exception raised when user inputs 'q' character. Used to break out of classification flow"""
     pass
